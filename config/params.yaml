@@ -16,7 +16,7 @@ regions:
                     b: 0.0
                     a: 0.3
 
-        frontleft:
+        frontright:
             x_min: -2.5
             x_max: -0.5
             y_min: 0.0
@@ -29,7 +29,7 @@ regions:
                     b: 0.0
                     a: 0.3
 
-        frontright:
+        frontleft:
             x_min: 0.5
             x_max: 2.5
             y_min: 0.0

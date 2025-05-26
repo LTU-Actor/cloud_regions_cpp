@@ -31,8 +31,8 @@ class CloudRegions : public rclcpp::Node {
             // define regions
             this->regions = {
                 "front",
-                "frontright",
                 "frontleft",
+                "frontright",
                 "rear"
             };
 
@@ -64,13 +64,14 @@ class CloudRegions : public rclcpp::Node {
             for(string param : params) {
                 this->config[param] = this->get_parameter(param).as_double();
             }
-            this->add_on_set_parameters_callback(bind(&CloudRegions::params_cb, this, placeholders::_1));
+            this->params_subscription_ = this->add_on_set_parameters_callback(bind(&CloudRegions::params_cb, this, placeholders::_1));
 
             // marker publisher
             this->markers_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("region_markers", 1);
 
             // pointcloud subscription
-            this->create_subscription<sensor_msgs::msg::PointCloud2>(pointcloud_topic, 1, bind(&CloudRegions::pointcloud_cb, this, placeholders::_1));
+            this->pointcloud_subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(pointcloud_topic, 1, bind(&CloudRegions::pointcloud_cb, this, placeholders::_1));
+            RCLCPP_INFO(this->get_logger(), ("Looking for data on " + pointcloud_topic).c_str());
 
 
         }
@@ -100,11 +101,12 @@ class CloudRegions : public rclcpp::Node {
             }
             this->publish_markers();
         }
+        rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_subscription_;
 
         /*
             Determines whether a point is within the specified region.
         */
-        bool point_in_region(pcl::PointXYZ pt, string region) {
+        bool point_in_region(const pcl::PointXYZ& pt, const string& region) {
             if(pt.z > this->config[region + ".z_min"] && pt.z < this->config[region + ".z_max"]) {
                 if(pt.y > this->config[region + ".y_min"] && pt.z < this->config[region + ".y_max"]) {
                     if(pt.x > this->config[region + ".x_min"] && pt.z < this->config[region + ".x_max"]) {
@@ -136,18 +138,18 @@ class CloudRegions : public rclcpp::Node {
                 marker.header.frame_id = "3d_lidar_link";
 
                 auto pose = geometry_msgs::msg::Pose();
-                pose.position.x = (this->config[region + ".x_max"] + this->config[region + ".x_min"]) / 2.0;
-                pose.position.y = (this->config[region + ".y_max"] + this->config[region + ".y_min"]) / 2.0;
+                pose.position.y = (this->config[region + ".x_max"] + this->config[region + ".x_min"]) / 2.0;
+                pose.position.x = (this->config[region + ".y_max"] + this->config[region + ".y_min"]) / 2.0;
                 pose.position.z = (this->config[region + ".z_max"] + this->config[region + ".z_min"]) / 2.0;
                 auto scale = geometry_msgs::msg::Vector3();
-                scale.x = (this->config[region + ".x_max"] - this->config[region + ".x_min"]);
-                scale.y = (this->config[region + ".y_max"] - this->config[region + ".y_min"]);
+                scale.y = (this->config[region + ".x_max"] - this->config[region + ".x_min"]);
+                scale.x = (this->config[region + ".y_max"] - this->config[region + ".y_min"]);
                 scale.z = (this->config[region + ".z_max"] - this->config[region + ".z_min"]);
                 auto color = std_msgs::msg::ColorRGBA();
-                color.r = this->config[region + "color.r"];
-                color.g = this->config[region + "color.g"];
-                color.b = this->config[region + "color.b"];
-                color.a = this->config[region + "color.a"];
+                color.r = this->config[region + ".color.r"];
+                color.g = this->config[region + ".color.g"];
+                color.b = this->config[region + ".color.b"];
+                color.a = this->config[region + ".color.a"];
 
                 marker.pose = pose;
                 marker.scale = scale;
@@ -168,6 +170,7 @@ class CloudRegions : public rclcpp::Node {
             result.reason = "success";
             return result;
         }
+        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr params_subscription_;
 
 
 };
