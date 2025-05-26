@@ -40,6 +40,7 @@ class CloudRegions : public rclcpp::Node {
 
             // create parameters and publishers for each region
             for(string region : this->regions) {
+                params.push_back(region + ".point_thresh");
                 params.push_back(region + ".x_min");
                 params.push_back(region + ".x_max");
                 params.push_back(region + ".y_min");
@@ -87,8 +88,10 @@ class CloudRegions : public rclcpp::Node {
             
             for(string region : this->regions) {
                 double closest = INFINITY;
+                int point_count = 0;
                 for(auto pt : cloud->points) {
                     if(point_in_region(pt, region)) {
+                        point_count++;
                         double dist = distance(pt);
                         if(dist < closest) {
                             closest = dist;
@@ -96,7 +99,13 @@ class CloudRegions : public rclcpp::Node {
                     }
                 }
                 auto closest_msg = std_msgs::msg::Float32();
-                closest_msg.data = closest;
+                if(point_count >= this->config[region + ".point_thresh"]) {
+                    closest_msg.data = closest;
+                }
+                else {
+                    closest_msg.data = INFINITY;
+                }
+                
                 region_pubs[region]->publish(closest_msg);
             }
             this->publish_markers();
@@ -108,8 +117,8 @@ class CloudRegions : public rclcpp::Node {
         */
         bool point_in_region(const pcl::PointXYZ& pt, const string& region) {
             if(pt.z > this->config[region + ".z_min"] && pt.z < this->config[region + ".z_max"]) {
-                if(pt.y > this->config[region + ".y_min"] && pt.z < this->config[region + ".y_max"]) {
-                    if(pt.x > this->config[region + ".x_min"] && pt.z < this->config[region + ".x_max"]) {
+                if(pt.x > this->config[region + ".y_min"] && pt.x < this->config[region + ".y_max"]) {
+                    if(pt.y > this->config[region + ".x_min"] && pt.y < this->config[region + ".x_max"]) {
                         return true;
                     }
                 }
