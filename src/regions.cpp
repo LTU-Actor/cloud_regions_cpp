@@ -117,8 +117,8 @@ class CloudRegions : public rclcpp::Node {
         */
         bool point_in_region(const pcl::PointXYZ& pt, const string& region) {
             if(pt.z > this->config[region + ".z_min"] && pt.z < this->config[region + ".z_max"]) {
-                if(pt.x > this->config[region + ".y_min"] && pt.x < this->config[region + ".y_max"]) {
-                    if(pt.y > this->config[region + ".x_min"] && pt.y < this->config[region + ".x_max"]) {
+                if(pt.y > this->config[region + ".y_min"] && pt.y < this->config[region + ".y_max"]) {
+                    if(pt.x > this->config[region + ".x_min"] && pt.x < this->config[region + ".x_max"]) {
                         return true;
                     }
                 }
@@ -147,12 +147,12 @@ class CloudRegions : public rclcpp::Node {
                 marker.header.frame_id = "3d_lidar_link";
 
                 auto pose = geometry_msgs::msg::Pose();
-                pose.position.y = (this->config[region + ".x_max"] + this->config[region + ".x_min"]) / 2.0;
-                pose.position.x = (this->config[region + ".y_max"] + this->config[region + ".y_min"]) / 2.0;
+                pose.position.x = (this->config[region + ".x_max"] + this->config[region + ".x_min"]) / 2.0;
+                pose.position.y = (this->config[region + ".y_max"] + this->config[region + ".y_min"]) / 2.0;
                 pose.position.z = (this->config[region + ".z_max"] + this->config[region + ".z_min"]) / 2.0;
                 auto scale = geometry_msgs::msg::Vector3();
-                scale.y = (this->config[region + ".x_max"] - this->config[region + ".x_min"]);
-                scale.x = (this->config[region + ".y_max"] - this->config[region + ".y_min"]);
+                scale.x = (this->config[region + ".x_max"] - this->config[region + ".x_min"]);
+                scale.y = (this->config[region + ".y_max"] - this->config[region + ".y_min"]);
                 scale.z = (this->config[region + ".z_max"] - this->config[region + ".z_min"]);
                 auto color = std_msgs::msg::ColorRGBA();
                 color.r = this->config[region + ".color.r"];
